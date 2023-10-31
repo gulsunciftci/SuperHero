@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SuperHeroAPI.Data;
@@ -73,6 +74,21 @@ namespace SuperHeroAPI.Controllers
 
             return Ok(await _dataContext.SuperHeroes.ToListAsync());
 
+        }
+
+        [HttpPatch("{id:int}")] //Puttan farkı putta nesneyi bir bütün olarak güncelliyoruz burada ise kısmi güncelleme yapabiliyoruz.
+        // Normalde bir array içinde tanımlanır
+        public async Task<ActionResult<List<SuperHero>>> PartiallyUpdateOneBook([FromRoute(Name = "id")] int id, [FromBody] JsonPatchDocument<SuperHero> superHeroPatch)
+        {
+            //check entity
+            var entity = await _dataContext.SuperHeroes.Where(b => b.Id.Equals(id)).SingleOrDefaultAsync();
+            if (entity is null)
+            {
+                return NotFound(); //404
+            }
+
+            superHeroPatch.ApplyTo(entity);
+            return NoContent(); //204
         }
     }
 }
